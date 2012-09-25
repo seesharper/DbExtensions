@@ -15,9 +15,9 @@
     public class KeyDelegateBuilder : IKeyDelegateBuilder
     {
         private readonly IOrdinalSelector ordinalSelector;
-        private readonly IMethodEmitter methodEmitter;
+        private readonly IMethodEmitter<IStructuralEquatable> methodEmitter;
 
-        public KeyDelegateBuilder(IOrdinalSelector ordinalSelector, IMethodEmitter methodEmitter)
+        public KeyDelegateBuilder(IOrdinalSelector ordinalSelector, IMethodEmitter<IStructuralEquatable> methodEmitter)
         {
             this.ordinalSelector = ordinalSelector;
             this.methodEmitter = methodEmitter;
@@ -27,7 +27,7 @@
         {
             IEnumerable<PropertyMappingInfo> ordinals = ordinalSelector.Execute(type, dataRecord.GetAllNames());
             var keyOrdinal = ordinals.OrderBy(pm => pm.Ordinal).FirstOrDefault();
-            if (keyOrdinal == null)
+            if (keyOrdinal != null && keyOrdinal.Ordinal == -1)
             {
                 throw new InvalidOperationException("Unable to create key for type: ".FormatWith(type.ToString()));
             }

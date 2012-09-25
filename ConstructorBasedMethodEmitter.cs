@@ -11,7 +11,7 @@
     /// from a <see cref="IDataRecord"/> instance.
     /// </summary>
     /// <typeparam name="T">The type of object to create.</typeparam>
-    public class ConstructorBasedMethodEmitter : MethodEmitter
+    public class ConstructorBasedMethodEmitter<T> : MethodEmitter<T>
     {        
         private readonly IConstructorSelector constructorSelector;        
                 
@@ -29,7 +29,7 @@
         /// <param name="constructorSelector">
         /// A <see cref="IConstructorSelector"/> that is responsible for selecting the constructor to be used.
         /// </param>        
-        public ConstructorBasedMethodEmitter(IMethodSkeleton methodSkeleton, IMethodSelector methodSelector, IConstructorSelector constructorSelector)
+        public ConstructorBasedMethodEmitter(IMethodSkeleton<T> methodSkeleton, IMethodSelector methodSelector, IConstructorSelector constructorSelector)
             : base(methodSkeleton, methodSelector)
         {
             this.constructorSelector = constructorSelector;
@@ -39,7 +39,7 @@
         /// Creates a new method used to populate an object from an <see cref="IDataRecord"/>.
         /// </summary>        
         /// <returns>An function delegate used to invoke the method.</returns>
-        public override Delegate CreateMethod(Type type)
+        public override Func<IDataRecord, int[], T> CreateMethod(Type type)
         {
             var constructor = GetConstructor(type);            
             LoadConstructorArguments(constructor);

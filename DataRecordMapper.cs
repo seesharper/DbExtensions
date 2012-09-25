@@ -11,10 +11,9 @@
     public class DataRecordMapper<T> where T : class
     {
         private readonly IOrdinalSelector ordinalSelector;
-        private readonly IMethodEmitter propertyEmitter;
+        private readonly IMethodEmitter<T> propertyEmitter;
 
-        
-
+        private readonly IKeyDelegateBuilder keyDelegateBuilder;
 
         private static ParameterExpression instanceParameter;
 
@@ -28,16 +27,17 @@
             dataRecordParameter = Expression.Parameter(typeof(IDataRecord), "dataRecord");
         }
 
-        public DataRecordMapper(IOrdinalSelector ordinalSelector, IMethodEmitter propertyEmitter)
+        public DataRecordMapper(IOrdinalSelector ordinalSelector, IMethodEmitter<T> propertyEmitter, IKeyDelegateBuilder keyDelegateBuilder)
         {
             this.ordinalSelector = ordinalSelector;
-            this.propertyEmitter = propertyEmitter;        
+            this.propertyEmitter = propertyEmitter;
+            this.keyDelegateBuilder = keyDelegateBuilder;
         }
 
         public DataRecordMapper()
         {
             IPropertySelector propertySelector = new SimplePropertySelector();
-            this.propertyEmitter = new PropertyBasedMethodEmitter(new DynamicMethodSkeleton(typeof(T), new[] { typeof(IDataRecord), typeof(int[]) }), new MethodSelector(), propertySelector); 
+            this.propertyEmitter = new PropertyBasedMethodEmitter<T>(new DynamicMethodSkeleton<T>(), new MethodSelector(), propertySelector); 
             this.ordinalSelector = new OrdinalSelector(propertySelector);
         }
 
@@ -55,16 +55,7 @@
 
         private Func<IDataRecord, IStructuralEquatable> CreateKeyDelegate(IDataRecord dataRecord)
         {
-            
-            IEnumerable<PropertyMappingInfo> ordinals = ordinalSelector.Execute(typeof(T), dataRecord.GetAllNames());
-            var keyOrdinal = ordinals.OrderBy(pm => pm.Ordinal).FirstOrDefault();
-
-            Type keyType = typeof(Tuple<>).MakeGenericType(keyOrdinal.Property.PropertyType);
-
-            var keyEmitter = new ConstructorBasedMethodEmitter(new DynamicMethodSkeleton(keyType, new[] { typeof(IDataRecord), typeof(int[]) }), new MethodSelector(), new ConstructorSelector());
-            var keyMethod = (Func<IDataRecord, int[], IStructuralEquatable>)keyEmitter.CreateMethod(keyType);
-            var key = keyMethod(dataRecord, new int[] { keyOrdinal.Ordinal });
-            return null;
+            return keyDelegateBuilder.CreateKeyDelegate(typeof(T), dataRecord);            
         }
 
 

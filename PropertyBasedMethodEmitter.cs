@@ -11,7 +11,7 @@
     /// as <see cref="IDataRecord"/> instance.
     /// </summary>
     /// <typeparam name="T">The type of object to create.</typeparam>
-    public class PropertyBasedMethodEmitter : MethodEmitter 
+    public class PropertyBasedMethodEmitter<T> : MethodEmitter<T> 
     {
         private readonly IPropertySelector propertySelector;
 
@@ -32,7 +32,7 @@
         /// A <see cref="IPropertySelector"/> that is responsible for selecting the properties that will have its
         /// value read from an <see cref="IDataRecord"/> instance.
         /// </param>        
-        public PropertyBasedMethodEmitter(IMethodSkeleton methodSkeleton, IMethodSelector methodSelector, IPropertySelector propertySelector)
+        public PropertyBasedMethodEmitter(IMethodSkeleton<T> methodSkeleton, IMethodSelector methodSelector, IPropertySelector propertySelector)
             : base(methodSkeleton, methodSelector)
         {
             this.propertySelector = propertySelector;
@@ -42,7 +42,7 @@
         /// Creates a new method used to populate an object from an <see cref="IDataRecord"/>.
         /// </summary>        
         /// <returns>An function delegate used to invoke the method.</returns>
-        public override Delegate CreateMethod(Type type)
+        public override Func<IDataRecord, int[], T> CreateMethod(Type type)
         {
             ConstructorInfo constructorInfo = GetParameterlessConstructor(type);
             EmitNewInstance(constructorInfo);

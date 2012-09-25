@@ -5,9 +5,10 @@
     using System.Reflection.Emit;
 
     /// <summary>
-    /// Represents the skeleton of an dynamic method. 
+    /// Represents the skeleton of a dynamic method.
     /// </summary>
-    public interface IMethodSkeleton
+    /// <typeparam name="T">The type of object returned by the dynamic method.</typeparam>
+    public interface IMethodSkeleton<out T>
     {
         /// <summary>
         /// Gets the <see cref="ILGenerator"/> used to emit the method body.
@@ -18,12 +19,7 @@
         /// <summary>
         /// Create a delegate used to invoke the dynamic method.
         /// </summary>
-        /// <param name="delegateType">
-        /// A delegate type whose signature matches that of the dynamic method.  
-        /// </param>
-        /// <returns>
-        /// A delegate of the specified type, which can be used to execute the dynamic method.
-        /// </returns>
-        Delegate CreateDelegate(Type delegateType);
+        /// <returns>A function delegate.</returns>
+        Func<IDataRecord, int[], T> CreateDelegate();
     }
 }

@@ -4,20 +4,20 @@
     using System.Collections.Concurrent;
     using System.Data;
 
-    public class CachedMethodEmitter : IMethodEmitter 
+    public class CachedMethodEmitter<T> : IMethodEmitter<T> 
     {
-        private readonly IMethodEmitter methodEmitter;
+        private readonly IMethodEmitter<T> methodEmitter;
 
-        private readonly ConcurrentDictionary<Type, Delegate> cache = new ConcurrentDictionary<Type, Delegate>();
+        private Lazy<Func<IDataRecord, int[], T>> cache;
 
-        public CachedMethodEmitter(IMethodEmitter methodEmitter)
-        {
-            this.methodEmitter = methodEmitter;
+        public CachedMethodEmitter(IMethodEmitter<T> methodEmitter)
+        {            
+            cache = new Lazy<Func<IDataRecord, int[], T>>(() => methodEmitter.CreateMethod(typeof(T)));
         }
 
-        public Delegate CreateMethod(Type type)
+        public Func<IDataRecord, int[], T> CreateMethod(Type type)
         {
-            return cache.GetOrAdd(type, t => this.methodEmitter.CreateMethod(t));
+            return cache.Value;
         }
     }
 }

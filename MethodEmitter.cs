@@ -9,9 +9,9 @@
     /// A base class for <see cref="IMethodEmitterEmitter"/> implementations.
     /// </summary>
     /// <typeparam name="T">The type of object returned from the delegate produced by this <see cref="IMethodEmitterEmitter"/></typeparam>
-    public abstract class MethodEmitter : IMethodEmitter
+    public abstract class MethodEmitter<T> : IMethodEmitter<T>
     {        
-        private readonly IMethodSkeleton methodSkeleton;
+        private readonly IMethodSkeleton<T> methodSkeleton;
         
         /// <summary>
         /// Initializes a new instance of the <see cref="MethodEmitter{T}"/> class.
@@ -22,7 +22,7 @@
         /// <param name="methodSelector">
         /// The get method provider.
         /// </param>
-        protected MethodEmitter(IMethodSkeleton methodSkeleton, IMethodSelector methodSelector)
+        protected MethodEmitter(IMethodSkeleton<T> methodSkeleton, IMethodSelector methodSelector)
         {
             MethodSelector = methodSelector;
             this.methodSkeleton = methodSkeleton;            
@@ -43,7 +43,7 @@
         /// Creates a new method used to populate an object from an <see cref="IDataRecord"/>.
         /// </summary>        
         /// <returns>An function delegate used to invoke the method.</returns>
-        public abstract Delegate CreateMethod(Type type);
+        public abstract Func<IDataRecord, int[], T> CreateMethod(Type type);
         
         /// <summary>
         /// Emits a <see cref="OpCodes.Ret"/> instruction into the current method body. 
@@ -57,10 +57,9 @@
         /// Creates a delegate used to invoke the dynamic method.
         /// </summary>
         /// <returns>A function delegate point to the dynamic method.</returns>
-        protected Delegate CreateDelegate(Type type)
-        {
-            var delegateType = typeof(Func<,,>).MakeGenericType(typeof(IDataRecord), typeof(int[]), type);
-            return methodSkeleton.CreateDelegate(delegateType);
+        protected Func<IDataRecord, int[], T> CreateDelegate(Type type)
+        {            
+            return methodSkeleton.CreateDelegate();
         }
 
         /// <summary>
