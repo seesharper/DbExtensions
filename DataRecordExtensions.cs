@@ -1,20 +1,13 @@
 ﻿namespace DbExtensions
 {
-    using System;
-    using System.Collections.Generic;
     using System.Data;
+    using System.Linq;
 
     public static class DataRecordExtensions
-    {
-        public static IDictionary<string,int> GetAllNames(this IDataRecord record)
+    {        
+        public static T As<T>(this IDataReader dataReader) where T:class
         {
-            IDictionary<string, int> result = new Dictionary<string, int>(record.FieldCount, StringComparer.InvariantCultureIgnoreCase);
-            
-            for (int i = 0; i < record.FieldCount; i++)
-            {
-                result.Add(record.GetName(i), i);                
-            }
-            return result;
+            return dataReader.AsEnumerable<T>().FirstOrDefault();
         }
     }
 }
