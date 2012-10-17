@@ -8,22 +8,22 @@ namespace DbExtensions.Implementation
     using DbExtensions.Interfaces;
 
     /// <summary>
-    /// An <see cref="IMethodEmitter"/> implementation that is capable of 
+    /// An <see cref="IMapper{T}"/> implementation that is capable of 
     /// creating a new instance of <typeparamref name="T"/> and setting property values from 
     /// as <see cref="IDataRecord"/> instance.
     /// </summary>
     /// <typeparam name="T">The type of object to create.</typeparam>
-    public class InstanceEmitter<T> : MethodEmitter<T> 
+    public class InstanceEmitter<T> : Mapper<T> 
     {
         private readonly IPropertySelector propertySelector;
 
         private LocalBuilder instanceVariable;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="PropertyBasedMethodEmitterEmitter"/> class.
+        /// Initializes a new instance of the <see cref="InstanceEmitter{T}"/> class.
         /// </summary>
         /// <param name="methodSkeleton">
-        /// A <see cref="IMethodSkeleton"/> implementation that 
+        /// A <see cref="IMethodSkeleton{T}"/> implementation that 
         /// represents the method skeleton for which to emit the method body.
         /// </param>
         /// <param name="methodSelector">
@@ -42,7 +42,8 @@ namespace DbExtensions.Implementation
 
         /// <summary>
         /// Creates a new method used to populate an object from an <see cref="IDataRecord"/>.
-        /// </summary>        
+        /// </summary>      
+        /// <param name="type">The target type for which to create the dynamic method.s</param>
         /// <returns>An function delegate used to invoke the method.</returns>
         public override Func<IDataRecord, int[], T> CreateMethod(Type type)
         {
@@ -50,7 +51,7 @@ namespace DbExtensions.Implementation
             EmitNewInstance(constructorInfo);
             EmitPropertySetters(type);
             LoadInstance();
-            EmitReturn();
+            EmitReturn();            
             return CreateDelegate(type);
         }
 

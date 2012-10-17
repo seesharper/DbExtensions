@@ -9,6 +9,9 @@ namespace DbExtensions.Implementation
 
     using DbExtensions.Interfaces;
 
+    /// <summary>
+    /// A class that is capable of creating an expression that maps many to one relations.
+    /// </summary>
     public class ManyToOneExpressionBuilder : IManyToOneExpressionBuilder
     {
         private readonly IPropertyMapper propertyMapper;
@@ -20,6 +23,14 @@ namespace DbExtensions.Implementation
         private ParameterExpression instanceParameter;
         private ParameterExpression dataRecordParameter;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ManyToOneExpressionBuilder"/> class.
+        /// </summary>
+        /// <param name="propertyMapper">The <see cref="IPropertyMapper"/> instance that is responsible for 
+        /// mapping <see cref="IDataRecord"/> fields to properties.</param>
+        /// <param name="complexPropertySelector">The <see cref="IPropertySelector"/> instance that is responsible for selecting 
+        /// complex properties from a given <see cref="Type"/>.</param>
+        /// <param name="dataRecordMapperFactory">A function delegate used to create <see cref="DataRecordMapper{T}"/></param>
         public ManyToOneExpressionBuilder(IPropertyMapper propertyMapper, IPropertySelector complexPropertySelector, Func<Type, object> dataRecordMapperFactory)
         {
             this.propertyMapper = propertyMapper;

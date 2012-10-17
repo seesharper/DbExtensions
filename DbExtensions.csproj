@@ -43,12 +43,18 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Core\CompositionRoot.cs" />
+    <Compile Include="Core\ILGeneratorExtensions.cs" />
+    <Compile Include="Decorators\CachedColumnSelector.cs" />
+    <Compile Include="Decorators\CachedConstructorSelector.cs" />
+    <Compile Include="Decorators\CachedInstanceDelegateBuilder.cs" />
     <Compile Include="Decorators\CachedKeyDelegateBuilder.cs" />
-    <Compile Include="Decorators\CachedMethodEmitter.cs" />
+    <Compile Include="Decorators\CachedMapper.cs" />
     <Compile Include="Decorators\CachedMethodSelector.cs" />
     <Compile Include="Decorators\CachedPropertySelector.cs" />
+    <Compile Include="Decorators\CachedRelationDelegateBuilder.cs" />
     <Compile Include="Decorators\MethodValidator.cs" />
     <Compile Include="Implementation\CollectionPropertySelector.cs" />
+    <Compile Include="Implementation\ColumnSelector.cs" />
     <Compile Include="Implementation\ComplexPropertySelector.cs" />
     <Compile Include="Implementation\ConstructorEmitter.cs" />
     <Compile Include="Implementation\ConstructorSelector.cs" />
@@ -64,13 +70,11 @@
     <Compile Include="Implementation\KeyDelegateBuilder.cs" />
     <Compile Include="Implementation\ManyToOneDelegateBuilder.cs" />
     <Compile Include="Implementation\ManyToOneExpressionBuilder.cs" />
-    <Compile Include="Implementation\MethodEmitter.cs" />
+    <Compile Include="Implementation\Mapper.cs" />
     <Compile Include="Implementation\MethodSelector.cs" />
     <Compile Include="Implementation\OneToManyDelegateBuilder.cs" />
     <Compile Include="Implementation\OneToManyExpressionBuilder.cs" />
     <Compile Include="DataReaderExtensions.cs" />
-    <Compile Include="DataRecordExtensions.cs" />
-    <Compile Include="Implementation\OrdinalSelector.cs" />
     <Compile Include="Implementation\PropertyMapper.cs" />
     <Compile Include="Implementation\PropertySelector.cs" />
     <Compile Include="Implementation\ReflectionHelper.cs" />
@@ -81,19 +85,20 @@
     <Compile Include="Interfaces\IConstructorSelector.cs" />
     <Compile Include="Interfaces\IDataReaderMapper.cs" />
     <Compile Include="Interfaces\IDataRecordMapper.cs" />
+    <Compile Include="Interfaces\IInstanceDelegateBuilder.cs" />
     <Compile Include="Interfaces\IKeyDelegateBuilder.cs" />
-    <Compile Include="Interfaces\ILGeneratorExtensions.cs" />
     <Compile Include="Interfaces\IManyToOneDelegateBuilder.cs" />
     <Compile Include="Interfaces\IManyToOneExpressionBuilder.cs" />
-    <Compile Include="Interfaces\IMethodEmitter.cs" />
+    <Compile Include="Interfaces\IMapper.cs" />
     <Compile Include="Interfaces\IMethodSelector.cs" />
     <Compile Include="Interfaces\IMethodSkeleton.cs" />
-    <Compile Include="Interfaces\IOneToManyDelegateBuilder.cs" />
+    <Compile Include="Interfaces\IRelationDelegateBuilder.cs" />
     <Compile Include="Interfaces\IOneToManyExpressionBuilder.cs" />
     <Compile Include="Interfaces\IOrdinalSelector.cs" />
     <Compile Include="Interfaces\IPropertyMapper.cs" />
     <Compile Include="Interfaces\IPropertySelector.cs" />
     <Compile Include="Model\PropertyMappingInfo.cs" />
+    <Compile Include="Implementation\OrdinalSelector.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Core\ServiceContainer.cs" />
   </ItemGroup>

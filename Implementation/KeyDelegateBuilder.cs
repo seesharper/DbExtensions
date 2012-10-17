@@ -16,15 +16,15 @@ namespace DbExtensions.Implementation
     public class KeyDelegateBuilder : IKeyDelegateBuilder
     {
         private readonly IPropertyMapper propertyMapper;
-        private readonly IMethodEmitter<IStructuralEquatable> keyInstanceEmitter;
+        private readonly IMapper<IStructuralEquatable> keyInstanceEmitter;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="KeyDelegateBuilder"/> class.
         /// </summary>
         /// <param name="propertyMapper">The <see cref="IPropertyMapper"/> responsible for mapping fields/columns to properties.</param>
-        /// <param name="keyInstanceEmitter">The <see cref="IMethodEmitter{T}"/> that is responsible for emitting a method that 
+        /// <param name="keyInstanceEmitter">The <see cref="IMapper{T}"/> that is responsible for emitting a method that 
         /// populates a <see cref="IStructuralEquatable"/> with key values.</param>
-        public KeyDelegateBuilder(IPropertyMapper propertyMapper, IMethodEmitter<IStructuralEquatable> keyInstanceEmitter)
+        public KeyDelegateBuilder(IPropertyMapper propertyMapper, IMapper<IStructuralEquatable> keyInstanceEmitter)
         {
             this.propertyMapper = propertyMapper;
             this.keyInstanceEmitter = keyInstanceEmitter;

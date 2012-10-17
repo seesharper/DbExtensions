@@ -4,38 +4,49 @@ namespace DbExtensions.Implementation
     using System.Collections;
     using System.Collections.Concurrent;
     using System.Data;
+    using System.Linq;
 
     using DbExtensions.Interfaces;
 
+    /// <summary>
+    /// Transforms an <see cref="IDataRecord"/> into an instance of <typeparamref name="T"/>.
+    /// </summary>
+    /// <typeparam name="T">The type of object to be returned from the mapper.</typeparam>
     public class DataRecordMapper<T> : IDataRecordMapper<T>
         where T : class
-    {        
-        private readonly IOrdinalSelector ordinalSelector;
+    {                        
         private readonly IKeyDelegateBuilder keyDelegateBuilder;
-        private readonly IOneToManyDelegateBuilder oneToManyDelegateBuilder;
-
-        private readonly IManyToOneDelegateBuilder manyToOneDelegateBuilder;
-
+        private readonly IRelationDelegateBuilder<T> oneToManyDelegateBuilder;        
         private readonly ConcurrentDictionary<IStructuralEquatable, T> queryCache = new ConcurrentDictionary<IStructuralEquatable, T>();
-        private readonly Func<IDataRecord, int[], T> createInstance;
-            
-        public DataRecordMapper(IOrdinalSelector ordinalSelector, IMethodEmitter<T> instanceEmitter, IKeyDelegateBuilder keyDelegateBuilder, IOneToManyDelegateBuilder oneToManyDelegateBuilder, IManyToOneDelegateBuilder manyToOneDelegateBuilder)
-        {        
-            createInstance = instanceEmitter.CreateMethod(typeof(T));
-            this.ordinalSelector = ordinalSelector;
+        private readonly Func<IDataRecord, T> createInstance;
+        
+        /// <summary>
+        /// Initializes a new instance of the <see cref="DataRecordMapper{T}"/> class.
+        /// </summary>
+        /// <param name="instanceDelegateBuilder">The <see cref="IInstanceDelegateBuilder{T}"/> that is responsible for creating a delegate 
+        /// that is capable of producing an instance of <typeparamref name="T"/> based on the current <see cref="IDataRecord"/>.</param>
+        /// <param name="keyDelegateBuilder">The <see cref="IKeyDelegateBuilder"/> that is responsible for creating a delegate 
+        /// that is capable of producing an <see cref="IStructuralEquatable"/> instance based on the current <see cref="IDataRecord"/>.</param>        
+        public DataRecordMapper(IInstanceDelegateBuilder<T> instanceDelegateBuilder, IKeyDelegateBuilder keyDelegateBuilder, IRelationDelegateBuilder<T> oneToManyDelegateBuilder)
+        {
+            createInstance = instanceDelegateBuilder.CreateInstanceDelegate();            
             this.keyDelegateBuilder = keyDelegateBuilder;
-            this.oneToManyDelegateBuilder = oneToManyDelegateBuilder;
-            this.manyToOneDelegateBuilder = manyToOneDelegateBuilder;
+            this.oneToManyDelegateBuilder = oneToManyDelegateBuilder;         
         }
 
+        /// <summary>
+        /// Executes the transformation.
+        /// </summary>
+        /// <param name="dataRecord">The target <see cref="IDataRecord"/>.</param>
+        /// <returns>An instance of <typeparamref name="T"/> that represents the result of the mapping/transformation.</returns>
         public T Execute(IDataRecord dataRecord)
         {                        
-            T instance = GetInstance(dataRecord, ordinalSelector.Execute(typeof(T), dataRecord));
-            ExecuteChildDelegate(dataRecord, instance);
+            T instance = GetInstance(dataRecord);
+            ExecuteOneToManyDelegate(dataRecord, instance);
             return instance;
         }
 
-        private void ExecuteChildDelegate(IDataRecord dataRecord, T instance)
+        private void ExecuteOneToManyDelegate(IDataRecord dataRecord, T instance)
         {
             var oneToManyDelegate = GetOneToManyDelegate(dataRecord);
             if (oneToManyDelegate != null)
@@ -44,10 +55,10 @@ namespace DbExtensions.Implementation
             }
         }
 
-        private T GetInstance(IDataRecord dataRecord, int[] ordinals)
+        private T GetInstance(IDataRecord dataRecord)
         {
             var key = GetKey(dataRecord);
-            return key == null ? null : queryCache.GetOrAdd(key, k => CreateInstance(dataRecord, ordinals));
+            return key == null ? null : queryCache.GetOrAdd(key, k => createInstance(dataRecord));
         }
 
         private IStructuralEquatable GetKey(IDataRecord dataRecord)
@@ -65,28 +76,12 @@ namespace DbExtensions.Implementation
 
         private Action<IDataRecord, T> GetOneToManyDelegate(IDataRecord dataRecord)
         {
-            return oneToManyDelegateBuilder.CreateDelegate<T>(dataRecord);            
+            return oneToManyDelegateBuilder.CreateDelegate(dataRecord);            
         }
-
-        private Action<IDataRecord, T> GetManyToOneDelegate(IDataRecord dataRecord)
-        {
-            return manyToOneDelegateBuilder.CreateDelegate<T>(dataRecord);
-        }
-
+       
         private Func<IDataRecord, IStructuralEquatable> CreateKeyDelegate(IDataRecord dataRecord)
         {
             return keyDelegateBuilder.CreateKeyDelegate(typeof(T), dataRecord);            
-        }
-        
-        private T CreateInstance(IDataRecord dataRecord, int[] ordinals)
-        {
-            T instance = createInstance(dataRecord, ordinals);
-            var manyToOneDelegate = GetManyToOneDelegate(dataRecord);
-            if (manyToOneDelegate != null)
-            {
-                manyToOneDelegate(dataRecord, instance);
-            }
-            return instance;
-        }
+        }               
     }    
 }

@@ -6,11 +6,21 @@ namespace DbExtensions.Implementation
 
     using DbExtensions.Interfaces;
 
+    /// <summary>
+    /// A <see cref="IPropertySelector"/> that returns complex properties.
+    /// </summary>
     public class ComplexPropertySelector : IPropertySelector
     {
+        /// <summary>
+        /// Executes the selector and returns a list of properties.
+        /// </summary>
+        /// <param name="type">The target <see cref="Type"/>.</param>
+        /// <returns>An array of <see cref="PropertyInfo"/> instances.</returns>
         public PropertyInfo[] Execute(Type type)
         {
-            return type.GetProperties().Where(t => !TypeExtensions.GetUnderlyingType(t.PropertyType).IsSimpleType() && !TypeExtensions.GetUnderlyingType(t.PropertyType).IsCollectionType()).ToArray();
+            return
+                type.GetProperties().Where(
+                    t => !t.PropertyType.GetUnderlyingType().IsSimpleType() && !t.PropertyType.GetUnderlyingType().IsCollectionType()).ToArray();
         }
     }
 }

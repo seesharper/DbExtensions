@@ -1,4 +1,4 @@
-namespace DbExtensions.Interfaces
+namespace DbExtensions.Core
 {
     using System.Reflection.Emit;
 

@@ -1,6 +1,7 @@
 namespace DbExtensions.Implementation
 {
     using System;
+    using System.Collections.Generic;
     using System.Collections.ObjectModel;
     using System.Data;
     using System.Linq;
@@ -39,16 +40,21 @@ namespace DbExtensions.Implementation
             PropertyInfo[] collectionProperties = collectionPropertySelector.Execute(typeof(T));
             var expressions = new Collection<Expression>();
             foreach (PropertyInfo property in collectionProperties)
-            {
-                Type interfaceType = property.PropertyType.GetCollectionInterfaceType();
+            {                
+                Type interfaceType = GetCollectionInterfaceType(property.PropertyType);
                 Type elementType = interfaceType.GetGenericArguments()[0];
-                if (this.HasAtLeastOneMappedProperty(elementType, dataRecord))
+                if (HasAtLeastOneMappedProperty(elementType, dataRecord))
                 {
-                    expressions.Add(this.CreateAddMethodCallExpression(interfaceType, elementType, property));
+                    expressions.Add(CreateAddMethodCallExpression(interfaceType, elementType, property));
                 }
             }
 
             return expressions.Count > 0 ? Expression.Lambda<Action<IDataRecord, T>>(Expression.Block(expressions), this.dataRecordParameter, this.instanceParameter) : null;
+        }
+
+        private static Type GetCollectionInterfaceType(Type type)
+        {
+            return type.GetInterfaces().FirstOrDefault(i => i.GetGenericTypeDefinition() == typeof(ICollection<>));
         }
 
         private Expression CreateAddMethodCallExpression(Type interfaceType, Type elementType, PropertyInfo propertyInfo)

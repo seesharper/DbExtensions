@@ -5,18 +5,19 @@ namespace DbExtensions.Implementation
     using System.Reflection;
     using System.Reflection.Emit;
 
+    using DbExtensions.Core;
     using DbExtensions.Interfaces;
 
     /// <summary>
-    /// A base class for <see cref="IMethodEmitterEmitter"/> implementations.
+    /// A base class for <see cref="IMapper{T}"/> implementations.
     /// </summary>
-    /// <typeparam name="T">The type of object returned from the delegate produced by this <see cref="IMethodEmitterEmitter"/></typeparam>
-    public abstract class MethodEmitter<T> : IMethodEmitter<T>
+    /// <typeparam name="T">The type of object returned from the delegate produced by this <see cref="IMapper{T}"/>.</typeparam>
+    public abstract class Mapper<T> : IMapper<T>
     {        
         private readonly IMethodSkeleton<T> methodSkeleton;
         
         /// <summary>
-        /// Initializes a new instance of the <see cref="MethodEmitter{T}"/> class.
+        /// Initializes a new instance of the <see cref="Mapper{T}"/> class.
         /// </summary>
         /// <param name="methodSkeleton">
         /// The method skeleton.
@@ -24,7 +25,7 @@ namespace DbExtensions.Implementation
         /// <param name="methodSelector">
         /// The get method provider.
         /// </param>
-        protected MethodEmitter(IMethodSkeleton<T> methodSkeleton, IMethodSelector methodSelector)
+        protected Mapper(IMethodSkeleton<T> methodSkeleton, IMethodSelector methodSelector)
         {
             MethodSelector = methodSelector;
             this.methodSkeleton = methodSkeleton;            
@@ -43,7 +44,8 @@ namespace DbExtensions.Implementation
 
         /// <summary>
         /// Creates a new method used to populate an object from an <see cref="IDataRecord"/>.
-        /// </summary>        
+        /// </summary>      
+        /// <param name="type">The target type for which to create the dynamic method.s</param>
         /// <returns>An function delegate used to invoke the method.</returns>
         public abstract Func<IDataRecord, int[], T> CreateMethod(Type type);
         
@@ -107,8 +109,31 @@ namespace DbExtensions.Implementation
         protected void MarkLabel(Label label)
         {
             ILGenerator.MarkLabel(label);
+        }
+
+        /// <summary>
+        /// Emits the code needed to retrieve the requested value from the <see cref="IDataRecord"/> instance.
+        /// </summary>
+        /// <param name="index">The index of the current ordinal.</param>
+        /// <param name="getMethod">The get method to be used to retrieve the value.</param>
+        /// <param name="targetType">The <see cref="Type"/> of the target <see cref="PropertyInfo"/> or <see cref="ParameterInfo"/>.</param>
+        protected void EmitGetValue(int index, MethodInfo getMethod, Type targetType)
+        {
+            if (targetType.IsNullable())
+            {
+                EmitGetNullableValue(index, getMethod, targetType);
             }
-                        
+            else
+            {
+                EmitGetNonNullableValue(index, getMethod);
+            }
+        }
+
+        private static ConstructorInfo GetNullableConstructor(Type type)
+        {
+            return typeof(Nullable<>).MakeGenericType(type).GetConstructor(new[] { type });
+        }
+        
         private void LoadDataRecord()
         {
             ILGenerator.Emit(OpCodes.Ldarg_0);
@@ -120,20 +145,8 @@ namespace DbExtensions.Implementation
             ILGenerator.EmitFastInt(index);
             ILGenerator.Emit(OpCodes.Ldelem_I4);            
         }
-
-        protected void EmitGetValue(int index, MethodInfo getMethod, Type targetType)
-        {
-            if(targetType.IsNullable())
-            {
-                EmitGetNullableValue(index, getMethod, targetType);
-            }
-            else
-            {
-                EmitGetNonNullableValue(index, getMethod, targetType);
-            }
-        }
-
-        private void EmitGetNonNullableValue(int index, MethodInfo getMethod, Type targetType)
+        
+        private void EmitGetNonNullableValue(int index, MethodInfo getMethod)
         {
             LoadDataRecord();
             LoadOrdinal(index);
@@ -147,7 +160,7 @@ namespace DbExtensions.Implementation
             LoadDataRecord();
             LoadOrdinal(index);
             EmitCallGetMethod(getMethod);
-            var nullableConstructor = getMethod.ReturnType.GetNullableConstructor();
+            var nullableConstructor = GetNullableConstructor(getMethod.ReturnType);
             ILGenerator.Emit(OpCodes.Call, nullableConstructor);
             ILGenerator.Emit(OpCodes.Ldloc, local);
         }
@@ -175,8 +188,6 @@ namespace DbExtensions.Implementation
         private void LoadIntegerValueOfMinusOne()
         {
             ILGenerator.Emit(OpCodes.Ldc_I4_M1);
-        }
-
-        
+        }        
     }
 }

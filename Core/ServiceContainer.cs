@@ -200,7 +200,7 @@ namespace DbExtensions.Core
         /// Registers services from the given <paramref name="assembly"/>.
         /// </summary>
         /// <param name="assembly">The assembly to be scanned for services.</param>
-        /// <param name="lifetime">The <see cref="ILifetime"/> instance that controls the lifetime of the registered service.</param>
+        /// <param name="lifetimeFactory">The <see cref="ILifetime"/> factory that controls the lifetime of the registered service.</param>
         /// <param name="shouldRegister">A function delegate that determines if a service implementation should be registered.</param>
         /// <remarks>
         /// If the target <paramref name="assembly"/> contains an implementation of the <see cref="ICompositionRoot"/> interface, this 
@@ -295,7 +295,7 @@ namespace DbExtensions.Core
 
     internal interface ILifetime
     {
-        object GetInstance(Func<object> createInstance);
+        object GetInstance(Func<object> createInstance);        
     }
     
     /// <summary>
@@ -389,13 +389,12 @@ namespace DbExtensions.Core
         private readonly Storage<object> constants = new Storage<object>();
         private readonly Stack<Action<DynamicMethodInfo>> dependencyStack = new Stack<Action<DynamicMethodInfo>>();
         private readonly ThreadSafeDictionary<Tuple<Type, string>, ServiceInfo> availableServices =
-            new ThreadSafeDictionary<Tuple<Type, string>, ServiceInfo>();         
-        
-        private Storage<IFactory> factories;
-        private bool firstServiceRequest = true;
+            new ThreadSafeDictionary<Tuple<Type, string>, ServiceInfo>();
 
         private readonly ThreadSafeDictionary<Type, List<ServiceInfo>> decorators = new ThreadSafeDictionary<Type, List<ServiceInfo>>();
 
+        private Storage<IFactory> factories;
+        private bool firstServiceRequest = true;
 
         static ServiceContainer()
         {
@@ -499,7 +498,7 @@ namespace DbExtensions.Core
         /// Registers services from the given <paramref name="assembly"/>.
         /// </summary>
         /// <param name="assembly">The assembly to be scanned for services.</param>
-        /// <param name="lifetime">The <see cref="ILifetime"/> instance that controls the lifetime of the registered service.</param>
+        /// <param name="lifetimeFactory">The <see cref="ILifetime"/> factory that controls the lifetime of the registered service.</param>
         /// <remarks>
         /// If the target <paramref name="assembly"/> contains an implementation of the <see cref="ICompositionRoot"/> interface, this 
         /// will be used to configure the container.
@@ -513,7 +512,7 @@ namespace DbExtensions.Core
         /// Registers services from the given <paramref name="assembly"/>.
         /// </summary>
         /// <param name="assembly">The assembly to be scanned for services.</param>
-        /// <param name="lifetime">The <see cref="ILifetime"/> instance that controls the lifetime of the registered service.</param>
+        /// <param name="lifetimeFactory">The <see cref="ILifetime"/> factory that controls the lifetime of the registered service.</param>
         /// <param name="shouldRegister">A function delegate that determines if a service implementation should be registered.</param>
         /// <remarks>
         /// If the target <paramref name="assembly"/> contains an implementation of the <see cref="ICompositionRoot"/> interface, this 
@@ -535,12 +534,10 @@ namespace DbExtensions.Core
             {
                 RegisterAssembly(assembly);
             }
-        }
-
-       
+        }       
         public void Decorate(Type serviceType, Type decoratorType, Func<ServiceInfo, bool> shouldDecorate)
         {
-            var serviceInfo = new ServiceInfo() { ServiceType = serviceType, ImplementingType = decoratorType, IsDecorator = true, ServiceName = string.Empty };
+            var serviceInfo = new ServiceInfo { ServiceType = serviceType, ImplementingType = decoratorType, IsDecorator = true, ServiceName = string.Empty };
             GetRegisteredDecorators(serviceType).Add(serviceInfo);
         }
 
@@ -861,6 +858,11 @@ namespace DbExtensions.Core
                     p => new ConstructorDependency { ServiceName = string.Empty, ServiceType = p.ParameterType, Parameter = p });
         }
 
+        private static ILifetime CloneLifeTime(ILifetime lifetime)
+        {
+            return lifetime == null ? null : (ILifetime)Activator.CreateInstance(lifetime.GetType());
+        }
+
         private Func<object> CreateDynamicMethodDelegate(Action<DynamicMethodInfo> serviceEmitter, Type serviceType)
         {
             var dynamicMethodInfo = new DynamicMethodInfo();
@@ -994,17 +996,17 @@ namespace DbExtensions.Core
         private void EmitNewInstance(ServiceInfo serviceInfo, DynamicMethodInfo dynamicMethodInfo)
         {            
             DoEmitNewInstance(GetConstructionInfo(serviceInfo), dynamicMethodInfo);
-            var decorators = GetDecorators(serviceInfo.ServiceType);
-            if (decorators.Length > 0)
+            var serviceDecorators = GetDecorators(serviceInfo.ServiceType);
+            if (serviceDecorators.Length > 0)
             {
-                EmitDecorators(serviceInfo,decorators,dynamicMethodInfo);
+                EmitDecorators(serviceInfo, serviceDecorators, dynamicMethodInfo);
             }                        
         }
 
         private ServiceInfo[] GetDecorators(Type serviceType)
         {
-            var decorators = GetRegisteredDecorators(serviceType);
-            if (decorators.Count == 0 && serviceType.IsGenericType)
+            var registeredDecorators = GetRegisteredDecorators(serviceType);
+            if (registeredDecorators.Count == 0 && serviceType.IsGenericType)
             {
                 var openGenericServiceType = serviceType.GetGenericTypeDefinition();
                 var openGenericDecorators = GetRegisteredDecorators(openGenericServiceType);
@@ -1013,15 +1015,14 @@ namespace DbExtensions.Core
                     foreach (ServiceInfo openGenericDecorator in openGenericDecorators)
                     {
                         var closedGenericDecoratorType = openGenericDecorator.ImplementingType.MakeGenericType(serviceType.GetGenericArguments());
-                        ServiceInfo serviceInfo = new ServiceInfo()
-                            { ServiceType = serviceType, ImplementingType = closedGenericDecoratorType, IsDecorator = true };
-                        decorators.Add(serviceInfo);
+                        var serviceInfo = new ServiceInfo { ServiceType = serviceType, ImplementingType = closedGenericDecoratorType, IsDecorator = true };
+                        registeredDecorators.Add(serviceInfo);
                     }
                 }
             }
-            return decorators.ToArray();
-        }
 
+            return registeredDecorators.ToArray();
+        }
 
         private void DoEmitNewInstance(ConstructionInfo constructionInfo, DynamicMethodInfo dynamicMethodInfo)
         {        
@@ -1035,15 +1036,15 @@ namespace DbExtensions.Core
             }
         }
 
-        private void EmitDecorators(ServiceInfo serviceInfo, ServiceInfo[] decorators, DynamicMethodInfo dynamicMethodInfo)
+        private void EmitDecorators(ServiceInfo serviceInfo, IEnumerable<ServiceInfo> serviceDecorators, DynamicMethodInfo dynamicMethodInfo)
         {            
-            foreach (ServiceInfo decorator in decorators)
+            foreach (ServiceInfo decorator in serviceDecorators)
             {
                 ConstructionInfo constructionInfo = GetConstructionInfo(decorator);
                 var constructorDependency = constructionInfo.ConstructorDependencies.FirstOrDefault(cd => cd.ServiceType == serviceInfo.ServiceType);
                 if (constructorDependency != null)
                 {
-                    constructorDependency.IsDecoratee = true;
+                    constructorDependency.IsDecoratorTarget = true;
                 }
 
                 DoEmitNewInstance(constructionInfo, dynamicMethodInfo);
@@ -1074,7 +1075,7 @@ namespace DbExtensions.Core
         {
             foreach (ConstructorDependency dependency in constructionInfo.ConstructorDependencies)
             {
-                if (!dependency.IsDecoratee)
+                if (!dependency.IsDecoratorTarget)
                 {
                     EmitDependency(dynamicMethodInfo, dependency);                    
                 }                
@@ -1325,7 +1326,7 @@ namespace DbExtensions.Core
             Action<DynamicMethodInfo, Type> emitter = (dmi, closedGenericServiceType) =>
                 { 
                     Type closedGenericImplementingType = openGenericImplementingType.MakeGenericType(closedGenericServiceType.GetGenericArguments());
-                    var serviceInfo = new ServiceInfo { ServiceType = closedGenericServiceType, ImplementingType = closedGenericImplementingType, ServiceName = serviceName, Lifetime = lifetime };
+                    var serviceInfo = new ServiceInfo { ServiceType = closedGenericServiceType, ImplementingType = closedGenericImplementingType, ServiceName = serviceName, Lifetime = CloneLifeTime(lifetime) };
                     var closedGenericEmitter = GetEmitDelegate(serviceInfo);
                     UpdateServiceEmitter(closedGenericServiceType, serviceName, closedGenericEmitter);
                     UpdateServiceRegistration(serviceInfo);
@@ -1333,7 +1334,7 @@ namespace DbExtensions.Core
                 };
             GetOpenGenericRegistrations(openGenericServiceType).AddOrUpdate(serviceName, s => emitter, (s, e) => emitter);            
         }
-                
+        
         private Action<DynamicMethodInfo> GetEmitDelegate(ServiceInfo serviceInfo)
         {
             if (serviceInfo.Lifetime == null)
@@ -1749,10 +1750,10 @@ namespace DbExtensions.Core
             public ParameterInfo Parameter { get; set; }
 
             /// <summary>
-            /// Gets or sets a <see cref="bool"/> value that indicates that this parameter represents  
-            /// the decoratee passed into a decorator instance. 
+            /// Gets or sets a value indicating whether that this parameter represents  
+            /// the decoration target passed into a decorator instance. 
             /// </summary>
-            public bool IsDecoratee { get; set; }
+            public bool IsDecoratorTarget { get; set; }
 
             /// <summary>
             /// Gets the name of the dependency accessor.
@@ -1945,9 +1946,7 @@ namespace DbExtensions.Core
     /// </summary>
     [System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
     internal class ServiceInfo 
-    {                        
-        //EmitInstance(DynamicMethodInfo
-        
+    {                                
         /// <summary>
         /// Gets or sets the service <see cref="Type"/>.
         /// </summary>
@@ -1978,13 +1977,13 @@ namespace DbExtensions.Core
         /// </summary>
         public object Value { get; set; }
 
+        public bool IsDecorator { get; set; }
+
         public override int GetHashCode()
         {
             return ServiceType.GetHashCode() ^ ServiceName.GetHashCode() ^ IsDecorator.GetHashCode();
         }
-
-        public bool IsDecorator { get; set; }
-
+        
         public override bool Equals(object obj)
         {
             var other = obj as ServiceInfo;
@@ -2042,12 +2041,12 @@ namespace DbExtensions.Core
             var context = ResolutionScope.Current;
             if (context == null)
             {
-                throw new InvalidOperationException("No ResolutionContext");
+                return createInstance();
             }
 
             return instances.GetOrAdd(context, s => CreateScopedInstance(s, createInstance));
         }
-
+       
         private object CreateScopedInstance(ResolutionContext context, Func<object> createInstance)
         {
             context.Completed += OnContextCompleted;
@@ -2059,7 +2058,7 @@ namespace DbExtensions.Core
         {
             object removedInstance;
             instances.TryRemove((ResolutionContext)sender, out removedInstance);
-        }
+        }      
     }
 
     /// <summary>
@@ -2157,26 +2156,27 @@ namespace DbExtensions.Core
     [System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
     internal class AssemblyScanner : IAssemblyScanner
     {
+        private static readonly List<Type> InternalInterfaces = new List<Type>();
+        private static readonly List<Type> InternalTypes = new List<Type>();
         private Assembly currentAssembly;
-        private static List<Type> internalInterfaces = new List<Type>();
-        private static List<Type> internalTypes = new List<Type>(); 
+
         static AssemblyScanner()
         {
-            internalInterfaces.Add(typeof(IServiceContainer));
-            internalInterfaces.Add(typeof(IServiceFactory));
-            internalInterfaces.Add(typeof(IServiceRegistry));
-            internalInterfaces.Add(typeof(IPropertySelector));
-            internalInterfaces.Add(typeof(IAssemblyLoader));
-            internalInterfaces.Add(typeof(IAssemblyScanner));
-            internalInterfaces.Add(typeof(ILifetime));
-            internalTypes.Add(typeof(ServiceContainer.LambdaExpressionParser));
-            internalTypes.Add(typeof(ServiceContainer.LambdaExpressionValidator));
-            internalTypes.Add(typeof(ServiceContainer.ConstructorDependency));
-            internalTypes.Add(typeof(ServiceContainer.PropertyDependecy));
-            internalTypes.Add(typeof(ThreadSafeDictionary<,>));
-            internalTypes.Add(typeof(ResolutionScope)); 
-            internalTypes.Add(typeof(SingletonLifetime));
-            internalTypes.Add(typeof(PerGraphLifetime));            
+            InternalInterfaces.Add(typeof(IServiceContainer));
+            InternalInterfaces.Add(typeof(IServiceFactory));
+            InternalInterfaces.Add(typeof(IServiceRegistry));
+            InternalInterfaces.Add(typeof(IPropertySelector));
+            InternalInterfaces.Add(typeof(IAssemblyLoader));
+            InternalInterfaces.Add(typeof(IAssemblyScanner));
+            InternalInterfaces.Add(typeof(ILifetime));
+            InternalTypes.Add(typeof(ServiceContainer.LambdaExpressionParser));
+            InternalTypes.Add(typeof(ServiceContainer.LambdaExpressionValidator));
+            InternalTypes.Add(typeof(ServiceContainer.ConstructorDependency));
+            InternalTypes.Add(typeof(ServiceContainer.PropertyDependecy));
+            InternalTypes.Add(typeof(ThreadSafeDictionary<,>));
+            InternalTypes.Add(typeof(ResolutionScope)); 
+            InternalTypes.Add(typeof(SingletonLifetime));
+            InternalTypes.Add(typeof(PerGraphLifetime));            
         }
 
         /// <summary>
@@ -2184,7 +2184,7 @@ namespace DbExtensions.Core
         /// </summary>
         /// <param name="assembly">The <see cref="Assembly"/> to scan.</param>        
         /// <param name="serviceRegistry">The target <see cref="IServiceRegistry"/> instance.</param>
-        /// <param name="lifetime">The <see cref="ILifetime"/> instance that controls the lifetime of the registered service.</param>
+        /// <param name="lifetimeFactory">The <see cref="ILifetime"/> factory that controls the lifetime of the registered service.</param>
         /// <param name="shouldRegister">A function delegate that determines if a service implementation should be registered.</param>
         public void Scan(Assembly assembly, IServiceRegistry serviceRegistry, Func<ILifetime> lifetimeFactory, Func<Type, bool> shouldRegister)
         {            
@@ -2243,7 +2243,7 @@ namespace DbExtensions.Core
 
         private static IEnumerable<Type> GetConcreteTypes(Assembly assembly)
         {            
-            return assembly.GetTypes().Where(t => t.IsClass && !t.IsNestedPrivate && !t.IsAbstract && !(t.Namespace ?? string.Empty).StartsWith("System") && !IsCompilerGenerated(t) && internalTypes.All(it => it != t));
+            return assembly.GetTypes().Where(t => t.IsClass && !t.IsNestedPrivate && !t.IsAbstract && !(t.Namespace ?? string.Empty).StartsWith("System") && !IsCompilerGenerated(t) && InternalTypes.All(it => it != t));
         }
 
         private static bool IsCompilerGenerated(Type type)
@@ -2256,7 +2256,7 @@ namespace DbExtensions.Core
             Type[] interfaces = implementingType.GetInterfaces();
             foreach (Type interfaceType in interfaces)
             {
-                if (internalInterfaces.All(i => i != interfaceType))
+                if (InternalInterfaces.All(i => i != interfaceType))
                 {
                     RegisterInternal(interfaceType, implementingType, serviceRegistry, lifetimeFactory());
                 }

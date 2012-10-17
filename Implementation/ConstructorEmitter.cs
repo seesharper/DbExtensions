@@ -13,15 +13,15 @@ namespace DbExtensions.Implementation
     /// from a <see cref="IDataRecord"/> instance.
     /// </summary>
     /// <typeparam name="T">The type of object to create.</typeparam>
-    public class ConstructorEmitter<T> : MethodEmitter<T>
+    public class ConstructorEmitter<T> : Mapper<T>
     {        
         private readonly IConstructorSelector constructorSelector;        
                 
         /// <summary>
-        /// Initializes a new instance of the <see cref="ConstructorBasedMethodEmitterEmitter"/> class.
+        /// Initializes a new instance of the <see cref="ConstructorEmitter{T}"/> class.
         /// </summary>
         /// <param name="methodSkeleton">
-        /// A <see cref="IMethodSkeleton"/> implementation that 
+        /// A <see cref="IMethodSkeleton{T}"/> implementation that 
         /// represents the method skeleton for which to emit the method body.
         /// </param>
         /// <param name="methodSelector">
@@ -36,10 +36,11 @@ namespace DbExtensions.Implementation
         {
             this.constructorSelector = constructorSelector;
         }
-               
+
         /// <summary>
         /// Creates a new method used to populate an object from an <see cref="IDataRecord"/>.
-        /// </summary>        
+        /// </summary>      
+        /// <param name="type">The target type for which to create the dynamic method.s</param>
         /// <returns>An function delegate used to invoke the method.</returns>
         public override Func<IDataRecord, int[], T> CreateMethod(Type type)
         {
