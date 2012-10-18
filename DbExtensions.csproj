@@ -86,6 +86,7 @@
     <Compile Include="Interfaces\IDataReaderMapper.cs" />
     <Compile Include="Interfaces\IDataRecordMapper.cs" />
     <Compile Include="Interfaces\IInstanceDelegateBuilder.cs" />
+    <Compile Include="Interfaces\IInstanceExpressionBuilder.cs" />
     <Compile Include="Interfaces\IKeyDelegateBuilder.cs" />
     <Compile Include="Interfaces\IManyToOneDelegateBuilder.cs" />
     <Compile Include="Interfaces\IManyToOneExpressionBuilder.cs" />

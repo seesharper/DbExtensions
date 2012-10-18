@@ -17,7 +17,7 @@
 
         private readonly IManyToOneDelegateBuilder<T> manyToOneDelegateBuilder;
 
-        public InstanceDelegateBuilder(IMapper<T> instanceEmitter, IOrdinalSelector ordinalSelector, IManyToOneDelegateBuilder<T> manyToOneDelegateBuilder )
+        public InstanceDelegateBuilder(IMapper<T> instanceEmitter, IOrdinalSelector ordinalSelector, IManyToOneDelegateBuilder<T> manyToOneDelegateBuilder)
         {
             this.instanceEmitter = instanceEmitter;
             this.ordinalSelector = ordinalSelector;
@@ -26,7 +26,7 @@
 
         public Func<IDataRecord, T> CreateInstanceDelegate()
         {
-            return CreateInstance;
+            return record => CreateInstance(record);
         }
 
         private T CreateInstance(IDataRecord dataRecord)

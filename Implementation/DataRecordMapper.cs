@@ -4,7 +4,6 @@ namespace DbExtensions.Implementation
     using System.Collections;
     using System.Collections.Concurrent;
     using System.Data;
-    using System.Linq;
 
     using DbExtensions.Interfaces;
 
