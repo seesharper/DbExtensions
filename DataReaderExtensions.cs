@@ -20,9 +20,14 @@
             ServiceContainer.RegisterAssembly(typeof(DataReaderExtensions).Assembly, ShouldRegister());
         }
 
+        /// <summary>
+        /// Registers a custom <see cref="IMethodSelector"/> that is responsible for providing a get method 
+        /// used to read values from an <see cref="IDataRecord"/>.
+        /// </summary>
+        /// <typeparam name="TSelector">The type of <see cref="IMethodSelector"/> to be registered</typeparam>
         public static void RegisterMethodSelector<TSelector>() where TSelector : IMethodSelector
         {
-            ServiceContainer.Register<IMethodSelector, TSelector>();
+            ServiceContainer.Register<IMethodSelector, TSelector>(new PerGraphLifetime());
         }
 
         /// <summary>

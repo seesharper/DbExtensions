@@ -11,7 +11,7 @@ namespace DbExtensions.Implementation
     /// </summary>
     public class PropertySelector : IPropertySelector
     {
-        private static readonly Type[] AdditionalTypes = new []
+        private static readonly Type[] AdditionalTypes = new[]
             {
                 typeof(string), 
                 typeof(Guid), 

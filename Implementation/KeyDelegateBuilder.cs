@@ -55,7 +55,5 @@ namespace DbExtensions.Implementation
         {
             return ordinals.Where(pm => pm.Ordinal != -1).OrderBy(pm => pm.Ordinal).FirstOrDefault();
         }
-    }
-
-    
+    }    
 }

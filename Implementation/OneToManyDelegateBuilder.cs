@@ -25,8 +25,7 @@ namespace DbExtensions.Implementation
 
         /// <summary>
         /// Creates a delegate that maps one to many relations.
-        /// </summary>
-        /// <typeparam name="T">The type of object that owns the relations.</typeparam>
+        /// </summary>        
         /// <param name="dataRecord">The <see cref="IDataRecord"/> that represents the available fields/columns.</param>
         /// <returns>A delegate used to map one to many relations.</returns>
         public Action<IDataRecord, T> CreateDelegate(IDataRecord dataRecord)

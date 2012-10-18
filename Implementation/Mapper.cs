@@ -20,10 +20,11 @@ namespace DbExtensions.Implementation
         /// Initializes a new instance of the <see cref="Mapper{T}"/> class.
         /// </summary>
         /// <param name="methodSkeleton">
-        /// The method skeleton.
+        /// The <see cref="IMethodSkeleton{T}"/> that represents the dynamic method to be created.
         /// </param>
         /// <param name="methodSelector">
-        /// The get method provider.
+        /// The <see cref="IMethodSelector"/> that is responsible for providing a get method 
+        /// used to read values from an <see cref="IDataRecord"/>.
         /// </param>
         protected Mapper(IMethodSkeleton<T> methodSkeleton, IMethodSelector methodSelector)
         {
@@ -60,6 +61,7 @@ namespace DbExtensions.Implementation
         /// <summary>
         /// Creates a delegate used to invoke the dynamic method.
         /// </summary>
+        /// <param name="type">The target type for which to create the dynamic method.s</param>
         /// <returns>A function delegate point to the dynamic method.</returns>
         protected Func<IDataRecord, int[], T> CreateDelegate(Type type)
         {            
@@ -133,7 +135,12 @@ namespace DbExtensions.Implementation
         {
             return typeof(Nullable<>).MakeGenericType(type).GetConstructor(new[] { type });
         }
-        
+
+        private static MethodInfo GetIsDbNullMethod()
+        {
+            return typeof(IDataRecord).GetMethod("IsDBNull");
+        }
+
         private void LoadDataRecord()
         {
             ILGenerator.Emit(OpCodes.Ldarg_0);
@@ -172,9 +179,9 @@ namespace DbExtensions.Implementation
         
         private void EmitCallIsDbNullMethod()
         {
-            ILGenerator.Emit(OpCodes.Callvirt, ReflectionHelper.IsDbNullMethod);
+            ILGenerator.Emit(OpCodes.Callvirt, GetIsDbNullMethod());
         }
-
+        
         private void EmitGotoEndLabelIfValueIsTrue(Label endLabel)
         {
             ILGenerator.Emit(OpCodes.Brtrue_S, endLabel);

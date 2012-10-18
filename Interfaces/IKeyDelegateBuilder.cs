@@ -13,11 +13,10 @@ namespace DbExtensions.Interfaces
         /// <summary>
         /// Creates a function delegate that returns a <see cref="IStructuralEquatable"/> instance, 
         /// representing the key values for the given <paramref name="type"/>.
-        /// </summary>        
+        /// </summary>
+        /// <param name="type">The type of object for which to create a key delegate.</param>        
         /// <param name="dataRecord">The <see cref="IDataRecord"/> containing the target fields/columns.</param>
         /// <returns>A function delegate used to retrieve key values for the given <paramref name="type"/>.</returns>
         Func<IDataRecord, IStructuralEquatable> CreateKeyDelegate(Type type, IDataRecord dataRecord);
-    }
-
-   
+    }   
 }

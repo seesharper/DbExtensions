@@ -59,8 +59,8 @@ namespace DbExtensions.Implementation
         /// <param name="type">The target <see cref="Type"/>.</param>
         /// <returns><b>true</b> if the <paramref name="type"/> implements <see cref="ICollection{T}"/>, otherwise <b>false</b></returns>       
         public static bool IsCollectionType(this Type type)
-        {
-            return type.GetInterfaces().Any(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(ICollection<>));
+        {            
+            return !type.IsArray && type.GetInterfaces().Any(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(ICollection<>));
         }
     }
 }

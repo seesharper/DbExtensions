@@ -16,8 +16,7 @@ namespace DbExtensions.Core
         /// </summary>
         /// <param name="serviceRegistry">The target <see cref="IServiceRegistry"/>.</param>
         public void Compose(IServiceRegistry serviceRegistry)
-        {
-                        
+        {                        
             serviceRegistry.RegisterAssembly(typeof(CompositionRoot).Assembly);
             serviceRegistry.Register<IColumnSelector, ColumnSelector>(new PerGraphLifetime());
             serviceRegistry.Decorate(typeof(IColumnSelector), typeof(CachedColumnSelector));
@@ -30,7 +29,14 @@ namespace DbExtensions.Core
             serviceRegistry.Decorate(typeof(IKeyDelegateBuilder), typeof(CachedKeyDelegateBuilder));
 
             serviceRegistry.Register(typeof(IInstanceDelegateBuilder<>), typeof(InstanceDelegateBuilder<>), new PerGraphLifetime());
-            serviceRegistry.Decorate(typeof(IInstanceDelegateBuilder<>),typeof(CachedInstanceDelegateBuilder<>));
+            serviceRegistry.Decorate(typeof(IInstanceDelegateBuilder<>), typeof(CachedInstanceDelegateBuilder<>));
+
+            serviceRegistry.Register<IOrdinalSelector, OrdinalSelector>(new PerGraphLifetime());
+            serviceRegistry.Decorate(typeof(IOrdinalSelector), typeof(CachedOrdinalSelector));
+
+            serviceRegistry.Register(typeof(IRelationDelegateBuilder<>), typeof(ManyToOneDelegateBuilder<>), "ManyToOneDelegateBuilder", new PerGraphLifetime());
+            serviceRegistry.Register(typeof(IRelationDelegateBuilder<>), typeof(OneToManyDelegateBuilder<>), "OneToManyDelegateBuilder", new PerGraphLifetime());
+            serviceRegistry.Decorate(typeof(IRelationDelegateBuilder<>), typeof(CachedRelationDelegateBuilder<>));
 
             serviceRegistry.Register<IMapper<IStructuralEquatable>, ConstructorEmitter<IStructuralEquatable>>("keyInstanceEmitter");
             serviceRegistry.Register<IOneToManyExpressionBuilder>(
@@ -41,9 +47,7 @@ namespace DbExtensions.Core
                 factory =>
                 new ManyToOneExpressionBuilder(
                     factory.GetInstance<IPropertyMapper>(), factory.GetInstance<Interfaces.IPropertySelector>("ComplexPropertySelector"), type => factory.GetInstance(type)));                        
-            serviceRegistry.Decorate(typeof(IMapper<>), typeof(CachedMapper<>));
-            
-            
+            serviceRegistry.Decorate(typeof(IMapper<>), typeof(CachedMapper<>));                        
         }
     }
 }

@@ -208,7 +208,6 @@ namespace DbExtensions.Core
         /// </remarks>     
         void RegisterAssembly(Assembly assembly, Func<ILifetime> lifetimeFactory, Func<Type, bool> shouldRegister);
 
-
         /// <summary>
         /// Registers services from assemblies in the base directory that matches the <paramref name="searchPattern"/>.
         /// </summary>
@@ -522,7 +521,6 @@ namespace DbExtensions.Core
         {
             AssemblyScanner.Scan(assembly, this, lifetimeFactory, shouldRegister);
         }
-
        
         /// <summary>
         /// Registers services from assemblies in the base directory that matches the <paramref name="searchPattern"/>.
@@ -535,6 +533,7 @@ namespace DbExtensions.Core
                 RegisterAssembly(assembly);
             }
         }       
+
         public void Decorate(Type serviceType, Type decoratorType, Func<ServiceInfo, bool> shouldDecorate)
         {
             var serviceInfo = new ServiceInfo { ServiceType = serviceType, ImplementingType = decoratorType, IsDecorator = true, ServiceName = string.Empty };
@@ -1916,7 +1915,6 @@ namespace DbExtensions.Core
         {
         }
     }
-
 
     [System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
     internal class ThreadSafeDictionary<TKey, TValue> : ConcurrentDictionary<TKey, TValue>

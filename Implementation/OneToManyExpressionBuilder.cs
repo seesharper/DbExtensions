@@ -10,6 +10,9 @@ namespace DbExtensions.Implementation
 
     using DbExtensions.Interfaces;
 
+    /// <summary>
+    /// A class that is capable of creating an expression that maps one to many relations.
+    /// </summary>
     public class OneToManyExpressionBuilder : IOneToManyExpressionBuilder
     {
         private readonly IPropertyMapper propertyMapper;
@@ -23,16 +26,23 @@ namespace DbExtensions.Implementation
         /// <summary>
         /// Initializes a new instance of the <see cref="OneToManyExpressionBuilder"/> class.
         /// </summary>
-        /// <param name="propertyMapper"></param>
-        /// <param name="collectionPropertySelector"></param>
-        /// <param name="dataRecordMapperFactory"></param>
-        public OneToManyExpressionBuilder(IPropertyMapper propertyMapper, IPropertySelector collectionPropertySelector, Func<Type,object> dataRecordMapperFactory)
+        /// <param name="propertyMapper">The <see cref="IPropertyMapper"/> that is responsible for mapping fields/columns from an <see cref="IDataRecord"/> to
+        /// the properties of a <see cref="Type"/>.</param>
+        /// <param name="collectionPropertySelector">The <see cref="IPropertySelector"/> that is responsible for selecting collection properties from a given <see cref="Type"/>.</param>
+        /// <param name="dataRecordMapperFactory">A function delegate used to create the <see cref="IDataReaderMapper{T}"/> needed for each collection property.</param>
+        public OneToManyExpressionBuilder(IPropertyMapper propertyMapper, IPropertySelector collectionPropertySelector, Func<Type, object> dataRecordMapperFactory)
         {
             this.propertyMapper = propertyMapper;
             this.collectionPropertySelector = collectionPropertySelector;
             this.dataRecordMapperFactory = dataRecordMapperFactory;            
         }
 
+        /// <summary>
+        /// Creates an <see cref="Expression{TDelegate}"/> that maps one to many relations.
+        /// </summary>
+        /// <typeparam name="T">The type of object that owns the relations.</typeparam>
+        /// <param name="dataRecord">The <see cref="IDataRecord"/> that represents the available fields/columns.</param>
+        /// <returns>A <see cref="Expression{TDelegate}"/> used to map one to many relations.</returns>
         public Expression<Action<IDataRecord, T>> CreateExpression<T>(IDataRecord dataRecord)
         {
             instanceParameter = Expression.Parameter(typeof(T), "instance");
@@ -49,7 +59,7 @@ namespace DbExtensions.Implementation
                 }
             }
 
-            return expressions.Count > 0 ? Expression.Lambda<Action<IDataRecord, T>>(Expression.Block(expressions), this.dataRecordParameter, this.instanceParameter) : null;
+            return expressions.Count > 0 ? Expression.Lambda<Action<IDataRecord, T>>(Expression.Block(expressions), dataRecordParameter, instanceParameter) : null;
         }
 
         private static Type GetCollectionInterfaceType(Type type)
@@ -65,12 +75,9 @@ namespace DbExtensions.Implementation
             MethodCallExpression executeMethodCallExpression = CreateExecuteMethodCallExpression(dataRecordMapperType);
             ParameterExpression elementConstantExpression = Expression.Variable(elementType, "childInstance");
             BinaryExpression assignExpression = Expression.Assign(elementConstantExpression, executeMethodCallExpression); 
-            MethodCallExpression addMethodCallExpression = Expression.Call(collectionPropertyExpression, addMethod, elementConstantExpression);
+            MethodCallExpression addMethodCallExpression = Expression.Call(collectionPropertyExpression, addMethod, new Expression[] { elementConstantExpression });
             BinaryExpression nullCheckExpression = Expression.MakeBinary(ExpressionType.NotEqual, elementConstantExpression, Expression.Constant(null));
             return Expression.Block(new[] { elementConstantExpression }, assignExpression, Expression.IfThen(nullCheckExpression, addMethodCallExpression));
-
-
-
         }
 
         private ConstantExpression CreateDataRecordMapperConstantExpression(Type dataRecordMapperType)
@@ -87,7 +94,7 @@ namespace DbExtensions.Implementation
         {
             MethodInfo executeMethod = dataRecordMapperType.GetMethod("Execute");
             ConstantExpression dataRecordMapperConstantExpression = CreateDataRecordMapperConstantExpression(dataRecordMapperType);
-            return Expression.Call(dataRecordMapperConstantExpression, executeMethod, dataRecordParameter);
+            return Expression.Call(dataRecordMapperConstantExpression, executeMethod, new Expression[] { dataRecordParameter });
         }
 
         private bool HasAtLeastOneMappedProperty(Type type, IDataRecord dataRecord)

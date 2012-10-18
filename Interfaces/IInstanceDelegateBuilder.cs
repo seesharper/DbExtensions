@@ -4,46 +4,19 @@
     using System.Collections;
     using System.Data;
 
-    public interface IInstanceDelegateBuilder<T> where T:class
+    /// <summary>
+    /// Represents a class that is capable of creating a delegate that 
+    /// produces an instance of <typeparamref name="T"/> based an a <see cref="IDataRecord"/>.
+    /// </summary>
+    /// <typeparam name="T">The type of object to be returned from the delegate.</typeparam>
+    public interface IInstanceDelegateBuilder<T> where T : class
     {
-        Func<IDataRecord, T> CreateInstanceDelegate();
-    }
-
-    public class InstanceDelegateBuilder<T> : IInstanceDelegateBuilder<T> where T : class
-    {
-        private readonly IMapper<T> instanceEmitter;
-
-        private readonly IOrdinalSelector ordinalSelector;
-
-        private readonly IManyToOneDelegateBuilder<T> manyToOneDelegateBuilder;
-
-        public InstanceDelegateBuilder(IMapper<T> instanceEmitter, IOrdinalSelector ordinalSelector, IManyToOneDelegateBuilder<T> manyToOneDelegateBuilder)
-        {
-            this.instanceEmitter = instanceEmitter;
-            this.ordinalSelector = ordinalSelector;
-            this.manyToOneDelegateBuilder = manyToOneDelegateBuilder;
-        }
-
-        public Func<IDataRecord, T> CreateInstanceDelegate()
-        {
-            return record => CreateInstance(record);
-        }
-
-        private T CreateInstance(IDataRecord dataRecord)
-        {
-            T instance = instanceEmitter.CreateMethod(typeof(T))(dataRecord, ordinalSelector.Execute(typeof(T), dataRecord));            
-            var manyToOneDelegate = GetManyToOneDelegate(dataRecord);
-            if (manyToOneDelegate != null)
-            {
-                manyToOneDelegate(dataRecord, instance);
-            }
-
-            return instance;
-        }
-
-        private Action<IDataRecord, T> GetManyToOneDelegate(IDataRecord dataRecord)
-        {
-            return manyToOneDelegateBuilder.CreateDelegate(dataRecord);
-        }
+        /// <summary>
+        /// Creates a delegate that 
+        /// produces an instance of <typeparamref name="T"/> based an a <see cref="IDataRecord"/>.
+        /// </summary>
+        /// <param name="dataRecord">The <see cref="IDataRecord"/> that represents the available fields/columns.</param>
+        /// <returns>A delegate that represents creating an instance of <typeparamref name="T"/>.</returns>
+        Func<IDataRecord, T> CreateInstanceDelegate(IDataRecord dataRecord);
     }
 }

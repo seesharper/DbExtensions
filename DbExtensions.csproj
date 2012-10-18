@@ -50,6 +50,7 @@
     <Compile Include="Decorators\CachedKeyDelegateBuilder.cs" />
     <Compile Include="Decorators\CachedMapper.cs" />
     <Compile Include="Decorators\CachedMethodSelector.cs" />
+    <Compile Include="Decorators\CachedOrdinalSelector.cs" />
     <Compile Include="Decorators\CachedPropertySelector.cs" />
     <Compile Include="Decorators\CachedRelationDelegateBuilder.cs" />
     <Compile Include="Decorators\MethodValidator.cs" />
@@ -66,6 +67,7 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>ErrorMessages.resx</DependentUpon>
     </Compile>
+    <Compile Include="Implementation\InstanceDelegateBuilder.cs" />
     <Compile Include="Implementation\InstanceEmitter.cs" />
     <Compile Include="Implementation\KeyDelegateBuilder.cs" />
     <Compile Include="Implementation\ManyToOneDelegateBuilder.cs" />
@@ -77,7 +79,6 @@
     <Compile Include="DataReaderExtensions.cs" />
     <Compile Include="Implementation\PropertyMapper.cs" />
     <Compile Include="Implementation\PropertySelector.cs" />
-    <Compile Include="Implementation\ReflectionHelper.cs" />
     <Compile Include="Implementation\StreamHelper.cs" />
     <Compile Include="Implementation\StringExtensions.cs" />
     <Compile Include="Implementation\TypeExtensions.cs" />
