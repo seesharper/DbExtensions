@@ -16,8 +16,7 @@ namespace DbExtensions.Core
         /// </summary>
         /// <param name="serviceRegistry">The target <see cref="IServiceRegistry"/>.</param>
         public void Compose(IServiceRegistry serviceRegistry)
-        {                        
-            serviceRegistry.RegisterAssembly(typeof(CompositionRoot).Assembly);
+        {                                    
             serviceRegistry.Register<IColumnSelector, ColumnSelector>(new PerGraphLifetime());
             serviceRegistry.Decorate(typeof(IColumnSelector), typeof(CachedColumnSelector));
             serviceRegistry.Register<IConstructorSelector, ConstructorSelector>(new SingletonLifetime());
@@ -38,7 +37,28 @@ namespace DbExtensions.Core
             serviceRegistry.Register(typeof(IRelationDelegateBuilder<>), typeof(OneToManyDelegateBuilder<>), "OneToManyDelegateBuilder", new PerGraphLifetime());
             serviceRegistry.Decorate(typeof(IRelationDelegateBuilder<>), typeof(CachedRelationDelegateBuilder<>));
 
-            serviceRegistry.Register<IMapper<IStructuralEquatable>, ConstructorEmitter<IStructuralEquatable>>("keyInstanceEmitter");
+            serviceRegistry.Register(typeof(IInstanceExpressionBuilder<>), typeof(InstanceExpressionBuilder<>));
+
+            serviceRegistry.Register(typeof(IMapperDelegateBuilder<>), typeof(ConstructorMapperDelegateBuilder<>), "ConstructorMapperDelegateBuilder", new SingletonLifetime());
+            serviceRegistry.Register(typeof(IMapperDelegateBuilder<>), typeof(PropertyMapperDelegateBuilder<>), "PropertyMapperDelegateBuilder", new SingletonLifetime());
+            
+            serviceRegistry.Register(typeof(IMethodSkeleton<>), typeof(DynamicMethodSkeleton<>));
+            
+            serviceRegistry.Register<IMethodSelector, MethodSelector>(new SingletonLifetime());
+            serviceRegistry.Decorate(typeof(IMethodSelector), typeof(CachedMethodSelector));
+
+            serviceRegistry.Register(typeof(IManyToOneDelegateBuilder<>), typeof(ManyToOneDelegateBuilder<>));
+
+            serviceRegistry.Register<Interfaces.IPropertySelector, Implementation.PropertySelector>(new SingletonLifetime());
+            serviceRegistry.Register<Interfaces.IPropertySelector, ComplexPropertySelector>("ComplexPropertySelector", new SingletonLifetime());
+            serviceRegistry.Register<Interfaces.IPropertySelector, CollectionPropertySelector>("CollectionPropertySelector", new SingletonLifetime());
+            serviceRegistry.Decorate(typeof(Interfaces.IPropertySelector), typeof(CachedPropertySelector));
+
+
+            serviceRegistry.Register<IPropertyMapper, PropertyMapper>(new PerGraphLifetime());
+            serviceRegistry.Decorate(typeof(IPropertyMapper), typeof(CachedPropertyMapper));
+
+            serviceRegistry.Register<IMapperDelegateBuilder<IStructuralEquatable>, ConstructorMapperDelegateBuilder<IStructuralEquatable>>("keyInstanceEmitter");
             serviceRegistry.Register<IOneToManyExpressionBuilder>(
                 factory =>
                 new OneToManyExpressionBuilder(
@@ -47,7 +67,7 @@ namespace DbExtensions.Core
                 factory =>
                 new ManyToOneExpressionBuilder(
                     factory.GetInstance<IPropertyMapper>(), factory.GetInstance<Interfaces.IPropertySelector>("ComplexPropertySelector"), type => factory.GetInstance(type)));                        
-            serviceRegistry.Decorate(typeof(IMapper<>), typeof(CachedMapper<>));                        
+            serviceRegistry.Decorate(typeof(IMapperDelegateBuilder<>), typeof(CachedMapperDelegateBuilder<>));                        
         }
     }
 }

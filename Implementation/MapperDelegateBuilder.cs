@@ -9,15 +9,15 @@ namespace DbExtensions.Implementation
     using DbExtensions.Interfaces;
 
     /// <summary>
-    /// A base class for <see cref="IMapper{T}"/> implementations.
+    /// A base class for <see cref="IMapperDelegateBuilder{T}"/> implementations.
     /// </summary>
-    /// <typeparam name="T">The type of object returned from the delegate produced by this <see cref="IMapper{T}"/>.</typeparam>
-    public abstract class Mapper<T> : IMapper<T>
+    /// <typeparam name="T">The type of object returned from the delegate produced by this <see cref="IMapperDelegateBuilder{T}"/>.</typeparam>
+    public abstract class MapperDelegateBuilder<T> : IMapperDelegateBuilder<T>
     {        
         private readonly IMethodSkeleton<T> methodSkeleton;
         
         /// <summary>
-        /// Initializes a new instance of the <see cref="Mapper{T}"/> class.
+        /// Initializes a new instance of the <see cref="MapperDelegateBuilder{T}"/> class.
         /// </summary>
         /// <param name="methodSkeleton">
         /// The <see cref="IMethodSkeleton{T}"/> that represents the dynamic method to be created.
@@ -26,7 +26,7 @@ namespace DbExtensions.Implementation
         /// The <see cref="IMethodSelector"/> that is responsible for providing a get method 
         /// used to read values from an <see cref="IDataRecord"/>.
         /// </param>
-        protected Mapper(IMethodSkeleton<T> methodSkeleton, IMethodSelector methodSelector)
+        protected MapperDelegateBuilder(IMethodSkeleton<T> methodSkeleton, IMethodSelector methodSelector)
         {
             MethodSelector = methodSelector;
             this.methodSkeleton = methodSkeleton;            

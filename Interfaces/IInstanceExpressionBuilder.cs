@@ -27,7 +27,7 @@
     /// <typeparam name="T">The type of object to be returned from the <see cref="Expression{TDelegate}"/></typeparam>
     public class InstanceExpressionBuilder<T> : IInstanceExpressionBuilder<T>
     {
-        private readonly IMapper<T> instanceEmitter;
+        private readonly IMapperDelegateBuilder<T> propertyMapperDelegateBuilder;
 
         private readonly IOrdinalSelector ordinalSelector;
 
@@ -36,8 +36,8 @@
         /// <summary>
         /// Initializes a new instance of the <see cref="InstanceExpressionBuilder{T}"/> class.
         /// </summary>
-        /// <param name="instanceEmitter">
-        /// The <see cref="IMapper{T}"/> that is responsible for emitting a method that is capable of mapping a <see cref="IDataRecord"/> 
+        /// <param name="propertyMapperDelegateBuilder">
+        /// The <see cref="IMapperDelegateBuilder{T}"/> that is responsible for emitting a method that is capable of mapping a <see cref="IDataRecord"/> 
         /// to an instance of <typeparamref name="T"/>.
         /// </param>
         /// <param name="ordinalSelector">
@@ -47,9 +47,9 @@
         /// The <see cref="IManyToOneExpressionBuilder"/> that is responsible for creating an <see cref="Expression{TDelegate}"/> that represents 
         /// mapping many to one relations.
         /// </param>
-        public InstanceExpressionBuilder(IMapper<T> instanceEmitter, IOrdinalSelector ordinalSelector, IManyToOneExpressionBuilder manyToOneExpressionBuilder)
+        public InstanceExpressionBuilder(IMapperDelegateBuilder<T> propertyMapperDelegateBuilder, IOrdinalSelector ordinalSelector, IManyToOneExpressionBuilder manyToOneExpressionBuilder)
         {
-            this.instanceEmitter = instanceEmitter;
+            this.propertyMapperDelegateBuilder = propertyMapperDelegateBuilder;
             this.ordinalSelector = ordinalSelector;
             this.manyToOneExpressionBuilder = manyToOneExpressionBuilder;
         }
@@ -63,7 +63,7 @@
         public Expression<Func<IDataRecord, T>> CreateExpression(IDataRecord dataRecord)
         {
             int[] ordinals = ordinalSelector.Execute(typeof(T), dataRecord);
-            Func<IDataRecord, int[], T> createInstanceMethod = instanceEmitter.CreateMethod(typeof(T));
+            Func<IDataRecord, int[], T> createInstanceMethod = propertyMapperDelegateBuilder.CreateMethod(typeof(T));
             var ordinalsExpression = Expression.Constant(ordinals, typeof(int[]));
             var createInstanceMethodExpression = Expression.Constant(createInstanceMethod, typeof(Func<IDataRecord, int[], T>));
             ParameterExpression datarecordExpression = Expression.Parameter(typeof(IDataRecord), "dataRecord");

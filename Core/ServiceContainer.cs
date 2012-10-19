@@ -1388,6 +1388,7 @@ namespace DbExtensions.Core
             }
             catch (InvalidOperationException ex)
             {
+                dependencyStack.Clear();
                 throw new InvalidOperationException(string.Format("Unable to resolve type: {0}, service name: {1}", serviceType, serviceName), ex);
             }            
         }

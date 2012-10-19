@@ -8,19 +8,19 @@ namespace DbExtensions.Implementation
     using DbExtensions.Interfaces;
 
     /// <summary>
-    /// An <see cref="IMapper{T}"/> implementation that is capable of 
+    /// An <see cref="IMapperDelegateBuilder{T}"/> implementation that is capable of 
     /// creating a new instance of <typeparamref name="T"/> and setting property values from 
     /// as <see cref="IDataRecord"/> instance.
     /// </summary>
     /// <typeparam name="T">The type of object to create.</typeparam>
-    public class InstanceEmitter<T> : Mapper<T> 
+    public class PropertyMapperDelegateBuilder<T> : MapperDelegateBuilder<T> 
     {
         private readonly IPropertySelector propertySelector;
 
         private LocalBuilder instanceVariable;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="InstanceEmitter{T}"/> class.
+        /// Initializes a new instance of the <see cref="PropertyMapperDelegateBuilder{T}"/> class.
         /// </summary>
         /// <param name="methodSkeleton">
         /// A <see cref="IMethodSkeleton{T}"/> implementation that 
@@ -34,7 +34,7 @@ namespace DbExtensions.Implementation
         /// A <see cref="IPropertySelector"/> that is responsible for selecting the properties that will have its
         /// value read from an <see cref="IDataRecord"/> instance.
         /// </param>        
-        public InstanceEmitter(IMethodSkeleton<T> methodSkeleton, IMethodSelector methodSelector, IPropertySelector propertySelector)
+        public PropertyMapperDelegateBuilder(IMethodSkeleton<T> methodSkeleton, IMethodSelector methodSelector, IPropertySelector propertySelector)
             : base(methodSkeleton, methodSelector)
         {
             this.propertySelector = propertySelector;

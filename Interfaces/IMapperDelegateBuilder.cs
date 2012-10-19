@@ -8,7 +8,7 @@ namespace DbExtensions.Interfaces
     /// <see cref="IDataRecord"/> instance.            
     /// </summary>
     /// <typeparam name="T">The type of object to be created.</typeparam>    
-    public interface IMapper<out T>
+    public interface IMapperDelegateBuilder<out T>
     {        
         /// <summary>
         /// Creates a new method used to populate an object from an <see cref="IDataRecord"/>.

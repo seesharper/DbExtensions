@@ -13,12 +13,12 @@ namespace DbExtensions.Implementation
     /// from a <see cref="IDataRecord"/> instance.
     /// </summary>
     /// <typeparam name="T">The type of object to create.</typeparam>
-    public class ConstructorEmitter<T> : Mapper<T>
+    public class ConstructorMapperDelegateBuilder<T> : MapperDelegateBuilder<T>
     {        
         private readonly IConstructorSelector constructorSelector;        
                 
         /// <summary>
-        /// Initializes a new instance of the <see cref="ConstructorEmitter{T}"/> class.
+        /// Initializes a new instance of the <see cref="ConstructorMapperDelegateBuilder{T}"/> class.
         /// </summary>
         /// <param name="methodSkeleton">
         /// A <see cref="IMethodSkeleton{T}"/> implementation that 
@@ -31,7 +31,7 @@ namespace DbExtensions.Implementation
         /// <param name="constructorSelector">
         /// A <see cref="IConstructorSelector"/> that is responsible for selecting the constructor to be used.
         /// </param>        
-        public ConstructorEmitter(IMethodSkeleton<T> methodSkeleton, IMethodSelector methodSelector, IConstructorSelector constructorSelector)
+        public ConstructorMapperDelegateBuilder(IMethodSkeleton<T> methodSkeleton, IMethodSelector methodSelector, IConstructorSelector constructorSelector)
             : base(methodSkeleton, methodSelector)
         {
             this.constructorSelector = constructorSelector;

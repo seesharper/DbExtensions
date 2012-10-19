@@ -48,16 +48,17 @@
     <Compile Include="Decorators\CachedConstructorSelector.cs" />
     <Compile Include="Decorators\CachedInstanceDelegateBuilder.cs" />
     <Compile Include="Decorators\CachedKeyDelegateBuilder.cs" />
-    <Compile Include="Decorators\CachedMapper.cs" />
+    <Compile Include="Decorators\CachedMapperDelegateBuilder.cs" />
     <Compile Include="Decorators\CachedMethodSelector.cs" />
     <Compile Include="Decorators\CachedOrdinalSelector.cs" />
+    <Compile Include="Decorators\CachedPropertyMapper.cs" />
     <Compile Include="Decorators\CachedPropertySelector.cs" />
     <Compile Include="Decorators\CachedRelationDelegateBuilder.cs" />
     <Compile Include="Decorators\MethodValidator.cs" />
     <Compile Include="Implementation\CollectionPropertySelector.cs" />
     <Compile Include="Implementation\ColumnSelector.cs" />
     <Compile Include="Implementation\ComplexPropertySelector.cs" />
-    <Compile Include="Implementation\ConstructorEmitter.cs" />
+    <Compile Include="Implementation\ConstructorMapperDelegateBuilder.cs" />
     <Compile Include="Implementation\ConstructorSelector.cs" />
     <Compile Include="Implementation\DataReaderMapper.cs" />
     <Compile Include="Implementation\DataRecordMapper.cs" />
@@ -68,11 +69,11 @@
       <DependentUpon>ErrorMessages.resx</DependentUpon>
     </Compile>
     <Compile Include="Implementation\InstanceDelegateBuilder.cs" />
-    <Compile Include="Implementation\InstanceEmitter.cs" />
+    <Compile Include="Implementation\PropertyMapperDelegateBuilder.cs" />
     <Compile Include="Implementation\KeyDelegateBuilder.cs" />
     <Compile Include="Implementation\ManyToOneDelegateBuilder.cs" />
     <Compile Include="Implementation\ManyToOneExpressionBuilder.cs" />
-    <Compile Include="Implementation\Mapper.cs" />
+    <Compile Include="Implementation\MapperDelegateBuilder.cs" />
     <Compile Include="Implementation\MethodSelector.cs" />
     <Compile Include="Implementation\OneToManyDelegateBuilder.cs" />
     <Compile Include="Implementation\OneToManyExpressionBuilder.cs" />
@@ -91,7 +92,7 @@
     <Compile Include="Interfaces\IKeyDelegateBuilder.cs" />
     <Compile Include="Interfaces\IManyToOneDelegateBuilder.cs" />
     <Compile Include="Interfaces\IManyToOneExpressionBuilder.cs" />
-    <Compile Include="Interfaces\IMapper.cs" />
+    <Compile Include="Interfaces\IMapperDelegateBuilder.cs" />
     <Compile Include="Interfaces\IMethodSelector.cs" />
     <Compile Include="Interfaces\IMethodSkeleton.cs" />
     <Compile Include="Interfaces\IRelationDelegateBuilder.cs" />
